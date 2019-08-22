@@ -1,0 +1,18 @@
+﻿@model List<string>
+    
+@{
+    ViewBag.Title = "Azure Blob Storage Tests";
+}
+
+<h2>@ViewBag.Title.</h2>
+<h3>@ViewBag.Message</h3>
+
+
+<h2>List blobs</h2>
+
+<ul>
+    @foreach (var item in Model)
+    {
+        <li>@item</li>
+    }
+</ul>
