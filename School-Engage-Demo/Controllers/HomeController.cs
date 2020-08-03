@@ -5,9 +5,14 @@ using System.Web;
 using System.Web.Mvc;
 using System.Configuration;
 using StackExchange.Redis;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.Azure;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using School_Engage_Demo.Models;
+using System.IO;
+using System.Threading.Tasks;
+using System.Drawing;
+using System.Net.Mime;
 
 namespace School_Engage_Demo.Controllers
 {
@@ -71,42 +76,59 @@ namespace School_Engage_Demo.Controllers
             return View();
         }
 
-        public ActionResult ListBlobs()
+        public ActionResult Storage()
         {
-            CloudBlobContainer images = GetCloudBlobContainer("images");
-            CloudBlobContainer pdfs = GetCloudBlobContainer("pdfs");
-
-            List<string> blobs = new List<string>();
-
-            foreach (IListBlobItem item in images.ListBlobs())
+            ViewBag.Message = "Azure Storage Operations";
+            return View(ListBlobs());
+        }
+        [HttpPost]
+        public ActionResult Storage(HttpPostedFileBase file)
+        {
+            if (file != null)
             {
-                if (item.GetType() == typeof(CloudBlockBlob))
+                string containerName = "images";
+                if (file.ContentType == "application/pdf")
                 {
-                    CloudBlockBlob blob = (CloudBlockBlob)item;
-                    blobs.Add(blob.Name);
+                    containerName = "pdfs";
                 }
-                else if (item.GetType() == typeof(CloudPageBlob))
-                {
-                    CloudPageBlob blob = (CloudPageBlob)item;
-                    blobs.Add(blob.Name);
-                }
-                else if (item.GetType() == typeof(CloudBlobDirectory))
-                {
-                    CloudBlobDirectory dir = (CloudBlobDirectory)item;
-                    blobs.Add(dir.Uri.ToString());
-                }
+                UploadFileToBlobStorage(containerName, file);
             }
 
-            return View(blobs);
+            return View(ListBlobs());
         }
 
-        public CloudBlobContainer GetCloudBlobContainer(string containerName)
+        public void UploadFileToBlobStorage(string containerName, HttpPostedFileBase file)
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(
-                    CloudConfigurationManager.GetSetting("schoolengage-con-str"));
-            CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-            CloudBlobContainer container = blobClient.GetContainerReference(containerName);
-            return container;
+            BlobContainerClient container = GetBlobContainer(containerName);
+            
+            BlobClient blobClient = container.GetBlobClient(file.FileName);
+            blobClient.  UploadAsync(file.InputStream, true);
+        }
+
+        public static Containers ListBlobs()
+        {
+            BlobContainerClient images = GetBlobContainer("images");
+            BlobContainerClient pdfs = GetBlobContainer("pdfs");
+            Containers containers = new Containers();
+
+            foreach (BlobItem item in images.GetBlobs())
+            {
+                containers.Images.Add(item.Name);
+            }
+
+            foreach (BlobItem item in pdfs.GetBlobs())
+            {
+                containers.Pdfs.Add(item.Name);
+            }
+
+            return containers;
+        }
+
+        private static BlobContainerClient GetBlobContainer(string containerName)
+        {
+            string storageAccountConnString = CloudConfigurationManager.GetSetting("schoolengage-con-str");
+            BlobContainerClient containerClient = new BlobContainerClient(storageAccountConnString, containerName);
+            return containerClient;
         }
     }
 }

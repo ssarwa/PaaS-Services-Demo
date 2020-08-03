@@ -1,0 +1,48 @@
+﻿@model  School_Engage_Demo.Models.Containers
+
+@{
+    ViewBag.Title = "Storage";
+}
+
+<h3>@ViewBag.Message</h3>
+<div style="display:flex; justify-content:left">
+    @using (Html.BeginForm("Storage", "Home", FormMethod.Post,
+                        new { enctype = "multipart/form-data" }))
+    {
+        <label for="file">Upload a file:</label>
+        <input type="file" name="file" id="file" style="width: 100%;" />
+        <input type="submit" value="Upload" class="submit" />
+    }
+</div>
+<br />
+<div style="display:flex; justify-content:space-around">
+    <div style="flex-direction:column">
+        <div><b>Table displaying Storage Blobs with images</b><br /></div>
+        <div style="width:45%">
+            <table class="table table-bordered table-responsive table-hover">
+                @foreach (var file in Model.Images)
+                {
+                    <tr>
+                        <td>@file</td>
+                    </tr>
+
+                }
+            </table>
+        </div>
+    </div>
+    <br />
+    <div style="flex-direction:column">
+        <div><b>Table displaying Storage Blobs with pdfs</b><br /></div>
+        <div style="width:45%">
+            <table class="table table-bordered table-responsive table-hover">
+                @foreach (var file in Model.Pdfs)
+                {
+                    <tr>
+                        <td>@file</td>
+                    </tr>
+
+                }
+            </table>
+        </div>
+    </div>
+</div>
